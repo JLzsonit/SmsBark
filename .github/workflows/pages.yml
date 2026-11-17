@@ -1,0 +1,48 @@
+name: Deploy Docs (GitHub Pages)
+
+# 把 docs/ 目录发布成网站：https://JLzsonit.github.io/SmsBark/
+# docs/index.html 是自包含单页（无外链资源），所以直接整目录上传即可。
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 发布 docs 到 Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # enablement: true —— 仓库还没开 Pages 时由工作流自己打开（源 = GitHub Actions）
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: 打包 docs 目录
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SmsBark · iOS 短信转发到 Bark</title>
+<meta name="description" content="一台 iPhone 收到短信，快捷指令自动判定拦截关键词后推送到 Bark，另一台 iPhone 立刻响。原生 SwiftUI，纯本地运行，IPA 免费下载。">
+<style>
+  :root{
+    --bg:#f5f5f7; --panel:#ffffff; --ink:#1d1d1f; --sub:#6e6e73;
+    --accent:#0a84ff; --accent-ink:#ffffff; --line:rgba(0,0,0,.08);
+    --chip:rgba(10,132,255,.10); --warn-bg:#fff7e6; --warn-ink:#8a5a00;
+    --ok:#30d158; --radius:18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b0b0d; --panel:#17171a; --ink:#f5f5f7; --sub:#9a9aa0;
+      --line:rgba(255,255,255,.10); --chip:rgba(10,132,255,.16);
+      --warn-bg:#2b230d; --warn-ink:#ffd60a;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro SC","PingFang SC","Segoe UI",Roboto,"Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+  /* 顶部 */
+  header{position:sticky;top:0;z-index:10;backdrop-filter:saturate(1.8) blur(18px);
+    background:color-mix(in srgb, var(--bg) 72%, transparent);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:18px;height:56px}
+  .brand{font-weight:700;font-size:17px;display:flex;align-items:center;gap:9px}
+  .brand .logo{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0a84ff,#5e5ce6);
+    display:grid;place-items:center;color:#fff;font-size:14px}
+  .nav a{color:var(--sub);text-decoration:none;font-size:14px}
+  .nav a:hover{color:var(--ink)}
+  .nav .dl{margin-left:auto;background:var(--accent);color:var(--accent-ink);padding:7px 15px;border-radius:99px;font-weight:600}
+  .nav .dl:hover{color:var(--accent-ink);opacity:.9}
+
+  /* Hero */
+  .hero{padding:72px 0 40px;text-align:center}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:var(--chip);color:var(--accent);
+    font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;margin-bottom:18px}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+  h1{font-size:clamp(30px,6vw,48px);line-height:1.15;letter-spacing:-.02em;font-weight:800}
+  h1 .grad{background:linear-gradient(120deg,#0a84ff,#5e5ce6,#30d158);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{color:var(--sub);font-size:clamp(15px,2.4vw,18px);max-width:620px;margin:16px auto 0}
+  .cta{display:flex;gap:14px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-weight:700;
+    padding:14px 26px;border-radius:14px;font-size:16px;transition:transform .15s ease,opacity .15s}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 8px 24px rgba(10,132,255,.35)}
+  .btn.primary:hover{opacity:.92}
+  .btn.ghost{border:1.5px solid var(--line);color:var(--ink);background:var(--panel)}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .meta{margin-top:16px;color:var(--sub);font-size:13px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .meta span{display:inline-flex;align-items:center;gap:5px}
+
+  /* 截图 */
+  .shots{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:34px 0 8px}
+  @media (max-width:720px){.shots{grid-template-columns:repeat(2,1fr)}}
+  .shot{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:8px;box-shadow:0 12px 32px rgba(0,0,0,.10)}
+  .shot img{width:100%;display:block;border-radius:12px}
+  .shot figcaption{text-align:center;font-size:12.5px;color:var(--sub);padding:7px 0 3px;font-weight:600}
+  @media (prefers-color-scheme: light){.shot{background:#fff}}
+
+  /* 区块 */
+  section{padding:36px 0}
+  h2{font-size:clamp(22px,3.6vw,30px);font-weight:800;letter-spacing:-.01em;margin-bottom:8px}
+  .sec-sub{color:var(--sub);font-size:15px;margin-bottom:22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card .ico{font-size:24px;margin-bottom:10px;display:block}
+  .card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+  .card p{font-size:13.5px;color:var(--sub)}
+
+  /* 步骤 */
+  .steps{counter-reset:s;display:grid;gap:12px}
+  .step{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px 18px 62px}
+  .step::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:16px;
+    width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;
+    display:grid;place-items:center;font-weight:800;font-size:15px}
+  .step h3{font-size:15.5px;font-weight:700;margin-bottom:4px}
+  .step p{font-size:14px;color:var(--sub)}
+  .step .path{margin-top:8px;background:var(--chip);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--ink)}
+  .sublist{margin:8px 0 0;padding-left:2px;list-style:none;display:grid;gap:5px}
+  .sublist li{font-size:13.5px;color:var(--sub);padding-left:18px;position:relative}
+  .sublist li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .sublist b{color:var(--ink)}
+
+  /* 提示条 */
+  .note{display:flex;gap:11px;background:var(--warn-bg);color:var(--warn-ink);
+    border-radius:14px;padding:14px 16px;font-size:14px;margin-top:18px}
+  .note .i{font-size:17px;line-height:1.4}
+  .ok-note{background:color-mix(in srgb, var(--ok) 12%, var(--panel));color:var(--ink)}
+
+  /* FAQ */
+  details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:10px}
+  details summary{cursor:pointer;font-weight:700;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";font-size:20px;color:var(--sub);font-weight:500}
+  details[open] summary::after{content:"–"}
+  details .a{margin-top:9px;font-size:14px;color:var(--sub)}
+
+  /* 页脚 */
+  footer{border-top:1px solid var(--line);margin-top:28px;padding:26px 0 42px;color:var(--sub);font-size:13px}
+  footer .links{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px}
+  footer a{color:var(--accent);text-decoration:none}
+  .sha{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--sub);opacity:.8}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="logo">📱</span>SmsBark</div>
+    <a href="#install">安装</a>
+    <a href="#setup">配置</a>
+    <a href="#faq">FAQ</a>
+    <a class="dl" href="https://github.com/JLzsonit/SmsBark/releases/download/v1.4.3/SmsBark-unsigned.ipa" download>下载 IPA</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="badge"><span class="dot"></span>v1.4.3 · build 9 · 已发布</span>
+    <h1>iPhone 短信，<span class="grad">秒推到另一台 iPhone</span></h1>
+    <p class="lead">收到短信 → 快捷指令自动调起「转发短信到 Bark」→ 关键词拦截判定 → Bark 推送。原生 SwiftUI，纯本地运行，不收集任何数据。</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/JLzsonit/SmsBark/releases/download/v1.4.3/SmsBark-unsigned.ipa" download>⬇︎ 下载 SmsBark-unsigned.ipa</a>
+      <a class="btn ghost" href="https://github.com/JLzsonit/SmsBark/releases/tag/v1.4.3" target="_blank" rel="noopener">GitHub Release</a>
+    </div>
+    <div class="meta">
+      <span>📦 285 KB</span><span>⚙️ arm64</span><span>📏 iOS 16 起</span><span>🔒 纯本地 · 无服务端</span>
+    </div>
+  </div>
+
+  <figure class="shots">
+    <div class="shot"><img src="https://raw.githubusercontent.com/zsonit/SmsBark/main/docs/screenshots/tab0.png" data-fallback="shots/tab0.png" alt="概览页" loading="lazy"><figcaption>概览 · 链路状态</figcaption></div>
+    <div class="shot"><img src="https://raw.githubusercontent.com/zsonit/SmsBark/main/docs/screenshots/tab1.png" data-fallback="shots/tab1.png" alt="推送页" loading="lazy"><figcaption>推送 · Bark 配置</figcaption></div>
+    <div class="shot"><img src="https://raw.githubusercontent.com/zsonit/SmsBark/main/docs/screenshots/tab2.png" data-fallback="shots/tab2.png" alt="拦截页" loading="lazy"><figcaption>拦截 · 关键词规则</figcaption></div>
+    <div class="shot"><img src="https://raw.githubusercontent.com/zsonit/SmsBark/main/docs/screenshots/tab3.png" data-fallback="shots/tab3.png" alt="指引页" loading="lazy"><figcaption>指引 · 四步搭完</figcaption></div>
+  </figure>
+
+  <section id="features">
+    <h2>它做什么</h2>
+    <p class="sec-sub">iOS 不允许第三方 App 读短信，所以「收到短信」交给系统快捷指令，剩下的事全由本 App 打理。</p>
+    <div class="grid">
+      <div class="card"><span class="ico">🎯</span><h3>关键词拦截</h3><p>黑名单 / 白名单双模式，验证码、广告一律不发到另一台手机；全角半角、空格自动归一化。</p></div>
+      <div class="card"><span class="ico">🧾</span><h3>运行记录</h3><p>动作每跑一次都留下记录：收到什么、判没拦、Bark 返回什么。配不通时一眼看出卡在哪一步。</p></div>
+      <div class="card"><span class="ico">🫧</span><h3>液态玻璃界面</h3><p>iOS 27 SDK 编译，标签栏与系统 App 同款玻璃质感，滚动自动收起。</p></div>
+      <div class="card"><span class="ico">🛡️</span><h3>隐私优先</h3><p>配置全存本机 UserDefaults，无服务端、无统计、无埋点，唯一的网络请求是你自己配的 Bark。</p></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>三步装到手机</h2>
+    <p class="sec-sub">IPA 是未签名包，需要自签一次（免费 Apple ID 就行）。</p>
+    <div class="steps">
+      <div class="step"><h3>下载 IPA</h3><p>点上面的下载按钮（GitHub 公开直链，无需登录），或把链接转发给朋友。下载后建议核对 SHA256（见页脚）。</p></div>
+      <div class="step"><h3>签名安装</h3><p>电脑装 <b>Sideloadly</b> 或 <b>AltStore</b>（Windows 可用），填你的 Apple ID 免费签名后安装到 iPhone；支持 TrollStore 的系统可以直接永久安装。</p></div>
+      <div class="step"><h3>信任开发者</h3><p>首次打开若提示不受信任：设置 → 通用 → VPN 与设备管理 → 信任你的开发者证书。免费签名有效期 7 天，到期重签即可。</p></div>
+    </div>
+    <div class="note"><span class="i">⚠️</span><div>装完 App 先去「推送」页填好 Bark 服务器地址和 Device Key，点「测试推送」确认另一台 iPhone 能收到，再往下配自动化。</div></div>
+  </section>
+
+  <section id="setup">
+    <h2>快捷指令四步搭完（iOS 27 实测）</h2>
+    <p class="sec-sub">装好 App 后，快捷指令里能直接搜到「转发短信到 Bark」动作，照下面点即可。</p>
+    <div class="steps">
+      <div class="step">
+        <h3>新建自动化，触发条件选「通知」</h3>
+        <p>发件人留空＝所有短信都转发。</p>
+        <div class="path">快捷指令 → 自动化 → ＋ → 通知 → 我收到来自 信息</div>
+      </div>
+      <div class="step">
+        <h3>添加动作</h3>
+        <div class="path">添加操作 → 搜「短信转发」→ 转发短信到 Bark</div>
+      </div>
+      <div class="step">
+        <h3>接上两个变量（唯一容易点错的一步）</h3>
+        <ul class="sublist">
+          <li>点「发件人」框 → 面板里点「快捷指令输入」→ 轻点「输入快捷指令的信息」</li>
+          <li>类型选「<b>通知</b>」→「获取」里选「<b>发件人</b>」</li>
+          <li>「短信内容」框重复同样路径，最后「获取」里选「<b>正文</b>」</li>
+        </ul>
+      </div>
+      <div class="step"><h3>关掉「运行前询问」→ 完成</h3><p>改成立即运行。之后收到的短信就会自动转发了。</p></div>
+    </div>
+    <div class="note ok-note"><span class="i">✅</span><div>拦截关键词在动作里自动生效，快捷指令里不用加任何判断动作。参数框里永远只用「选择变量」，不要用键盘打字——打进去的是固定文字。</div></div>
+  </section>
+
+  <section id="faq">
+    <h2>常见问题</h2>
+    <details><summary>为什么不能全自动创建自动化？</summary><div class="a">苹果没有开放"替用户创建自动化"的任何接口，触发器和动作都无法由 App 预填——任何 App 声称能全自动创建都是假的。本页的四步已经是最短路径。</div></details>
+    <details><summary>拦了关键词为什么另一台手机还是响？</summary><div class="a">打开 App「拦截」页最下面的「运行记录」：显示"已拦截"说明规则生效了（被拦的不会推送）；显示"内容为空"说明自动化里「短信内容」没接到「快捷指令输入 → 正文」；一条记录都没有说明自动化没调到动作，去检查触发器开关和「运行前询问」。</div></details>
+    <details><summary>iMessage / 验证码也会转发吗？</summary><div class="a">iMessage 同样会触发自动化；验证码短信可以在「拦截」页加关键词（黑名单模式）拦掉，或改白名单模式只放行需要的短信。</div></details>
+    <details><summary>会耗电 / 上传我的短信吗？</summary><div class="a">没有后台常驻，短信到达那一刻快捷指令发一条 GET 请求就结束。App 本身不收集任何数据，配置只存在这台设备上。</div></details>
+    <details><summary>签名 7 天到期怎么办？</summary><div class="a">用 AltStore 开着同一 Wi-Fi 会自动续签；或到期后用 Sideloadly 重新签一次。有付费开发者账号（$99/年）可以签一年。</div></details>
+  </section>
+
+  <footer>
+    <div class="links">
+      <a href="https://github.com/JLzsonit/SmsBark" target="_blank" rel="noopener">GitHub 仓库</a>
+      <a href="https://github.com/JLzsonit/SmsBark/releases/latest" target="_blank" rel="noopener">最新 Release</a>
+      <a href="https://github.com/JLzsonit/SmsBark/releases/download/v1.4.3/SmsBark-unsigned.ipa.sha256" download>SHA256 校验文件</a>
+    </div>
+    <div class="sha">SHA256: 2fa83ba1f407288380b52b8d4ce365d85449f54f8120838a1236ee6d09d5aebc</div>
+    <div style="margin-top:8px">SmsBark · MIT License · 纯本地运行，不采集任何数据</div>
+  </footer>
+
+</main>
+<script>
+(function(){
+  var SC = new URLSearchParams(location.search).get('sharecode');
+  function withSc(p){ return SC ? p + '?sharecode=' + SC : p; }
+  document.querySelectorAll('img[data-fallback]').forEach(function(img){
+    img.onerror = function(){
+      img.onerror = null;
+      img.src = withSc(img.getAttribute('data-fallback'));
+    };
+  });
+})();
+</script>
+</body>
+</html>

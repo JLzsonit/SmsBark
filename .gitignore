@@ -1,0 +1,10 @@
+.DS_Store
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.sha256
+SmsBark.xcodeproj/
+xcuserdata/
+*.xcuserstate
+Info.plist

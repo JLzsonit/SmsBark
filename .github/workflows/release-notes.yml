@@ -1,0 +1,60 @@
+name: 更新 Release 说明
+
+# 往 docs/release-notes/<tag>.md 里写好发布说明，push 到 main 就会自动覆盖对应 Release 的说明。
+# 也可以在 Actions 页面手动触发，指定 tag。
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/release-notes/**'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要更新的 tag（留空则取最新的 tag）'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-notes
+  cancel-in-progress: false
+
+jobs:
+  notes:
+    name: 覆盖 Release 说明
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 用 notes 文件覆盖 Release 说明
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG=$(git describe --tags --abbrev=0)
+          fi
+          echo "目标 tag: $TAG"
+          F="docs/release-notes/${TAG}.md"
+          if [ ! -f "$F" ]; then
+            echo "没有 $F，跳过"
+            exit 0
+          fi
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG 还不存在，跳过"
+            exit 0
+          fi
+          gh release edit "$TAG" --notes-file "$F"
+          TITLE=$(head -1 "$F" | sed 's/^#[[:space:]]*//')
+          if [ -n "$TITLE" ]; then
+            gh release edit "$TAG" --title "$TITLE"
+            echo "标题 → $TITLE"
+          fi
+          echo "已更新 $TAG 的发布说明"
