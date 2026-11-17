@@ -1,5 +1,17 @@
 # SmsBark · iOS 短信转发到 Bark
 
+<!-- bilingual-intro -->
+**中文**：iPhone 收到短信后由「快捷指令」触发本 App 的动作，按关键词规则判定是否拦截，再推送到 Bark；拦截规则、运行记录、链路自测全部在 App 内完成。原生 SwiftUI，无需 Mac 也能在 GitHub 上直接出 IPA。
+
+**English**: A native SwiftUI iOS client that receives an SMS trigger from Shortcuts, applies keyword rules, and pushes the message to Bark. Rule management, run logs and link self-test are built in. Unsigned IPA is built on GitHub Actions.
+
+| 项目 / Item | 说明 / Note |
+|---|---|
+| 平台 / Platform | iOS 26 – 27 |
+| 安装 / Install | [Releases](https://github.com/JLzsonit/SmsBark/releases/latest) · 未签名 IPA，需自签 / Unsigned IPA, self-sign required |
+| 许可证 / License | 未声明 / Not specified |
+
+
 一台 iPhone 收到短信 → 快捷指令调起本 App 的动作 → 自动判定拦截关键词 → 推送到 Bark → 另一台 iPhone 立刻响。
 
 **直接下载 IPA**：https://github.com/JLzsonit/SmsBark/releases/latest
