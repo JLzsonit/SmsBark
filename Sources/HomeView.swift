@@ -28,7 +28,7 @@ struct HomeView: View {
                 .padding(.bottom, 28)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("短信转发")
+            .navigationTitle("SmsBark")
             .navigationBarTitleDisplayMode(.large)
             .onAppear { latestLogs = RunLog.load() }
             .onChange(of: scenePhase) { phase in

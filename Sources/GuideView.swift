@@ -17,7 +17,7 @@ struct GuideView: View {
              sub: [],
              icon: "bell.badge.fill"),
         Step(title: "添加操作：转发短信到 Bark",
-             detail: "点「添加操作」→ 搜索「短信转发」→ 选本 App 提供的「转发短信到 Bark」。拦截页里配的关键词在这一步自动生效，不需要再加任何判断动作。",
+             detail: "点「添加操作」→ 搜索「SmsBark」→ 选本 App 提供的「转发短信到 Bark」。拦截页里配的关键词在这一步自动生效，不需要再加任何判断动作。",
              sub: [],
              icon: "square.and.arrow.down.fill"),
         Step(title: "点「发件人」和「短信内容」接变量",
@@ -108,7 +108,7 @@ struct GuideView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 tap("① 自动化 → ＋ → 选「通知」→「我收到来自 信息」")
-                tap("② 添加操作 → 搜「短信转发」→ 选「转发短信到 Bark」")
+                tap("② 添加操作 → 搜「SmsBark」→ 选「转发短信到 Bark」")
                 tap("③ 发件人／短信内容 → 快捷指令输入 → 输入快捷指令的信息 → 类型「通知」→ 获取「发件人」/「正文」")
                 tap("④ 关掉「运行前询问」→ 右上角「完成」")
             }

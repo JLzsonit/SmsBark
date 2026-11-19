@@ -8,7 +8,7 @@ struct ForwardSmsIntent: AppIntent {
     static var title: LocalizedStringResource = "转发短信到 Bark"
     static var description: IntentDescription {
         IntentDescription(
-            "把发件人和短信内容推送到「短信转发」App 里配置的 Bark，并自动执行 App「拦截」页里的关键词规则（黑名单命中不推送 / 白名单未命中不推送）。配合「收到信息」自动化使用，参数接上快捷指令输入即可。",
+            "把发件人和短信内容推送到「SmsBark」里配置的 Bark，并自动执行 App「拦截」页里的关键词规则（黑名单命中不推送 / 白名单未命中不推送）。配合「收到信息」自动化使用，参数接上快捷指令输入即可。",
             categoryName: "短信"
         )
     }
@@ -27,7 +27,7 @@ struct ForwardSmsIntent: AppIntent {
         let config = PushConfig.load()
         guard config.isReady else {
             record(.skipped, "还没填 Bark Device Key，先去 App 的「推送」页填好")
-            return .result(dialog: "还没填写 Bark Key，先打开「短信转发」App 在「推送」页填好")
+            return .result(dialog: "还没填写 Bark Key，先打开「SmsBark」在「推送」页填好")
         }
 
         let cleanSender = sender.trimmingCharacters(in: .whitespacesAndNewlines)

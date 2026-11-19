@@ -49,7 +49,7 @@ iOS 不允许任何第三方 App 读取短信收件箱，App Store 也不允许�
 装好 App 后，快捷指令里就能搜到本 App 提供的「转发短信到 Bark」动作，4 步建完：
 
 1. 快捷指令 → 底部「**自动化**」→ 右上角 ＋ → 选「**通知**」→ 条件「**我收到来自 信息**」（发件人留空＝所有短信都转发）
-2. 「添加操作」→ 搜「短信转发」→ 选「**转发短信到 Bark**」
+2. 「添加操作」→ 搜「SmsBark」→ 选「**转发短信到 Bark**」
 3. 接变量（唯一容易点错的一步）：
    - 点「发件人」框 → 面板里点「快捷指令输入」→ 轻点「输入快捷指令的信息」
    - 类型选「**通知**」→「获取」里选「**发件人**」
@@ -118,7 +118,8 @@ SmsBark/
 │   ├── ConfigView.swift
 │   ├── RulesView.swift
 │   └── GuideView.swift
-├── Resources/Assets.xcassets   # App 图标与主题色
+├── Resources/Assets.xcassets   # App 图标（浅色 / 深色 / 着色三套）与主题色
+├── Tools/make_icon.py          # 图标生成脚本：改配色或几何后重跑即可复现三套图标
 ├── dist/                       # 本地留存的构建产物（IPA + 校验值，不入库）
 ├── docs/index.html             # 同方案的可视化配置器（网页版，可开 GitHub Pages）
 ├── docs/release-notes/          # 每个 tag 的发布说明，push 后自动覆盖 Release 说明

@@ -981,7 +981,7 @@
     }
     const body = st.bodyTpl
       .replace(/\{\{发件人\}\}/g, '10086')
-      .replace(/\{\{内容\}\}/g, '这是一条来自「短信转发器」的测试推送，看到说明配置成功 ✅');
+      .replace(/\{\{内容\}\}/g, '这是一条来自 SmsBark 的测试推送，看到说明配置成功 ✅');
     const qs = queryString(st);
     const url = st.server + '/' + st.key + '/' + enc(st.title) + '/' + enc(body) + (qs ? '?' + qs : '');
     window.open(url, '_blank', 'noopener');

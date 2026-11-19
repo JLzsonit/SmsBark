@@ -10,8 +10,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.4.3"
-    CURRENT_PROJECT_VERSION: "9"
+    MARKETING_VERSION: "1.4.4"
+    CURRENT_PROJECT_VERSION: "10"
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     SWIFT_STRICT_CONCURRENCY: minimal
 
@@ -37,7 +37,7 @@ targets:
     info:
       path: Info.plist
       properties:
-        CFBundleDisplayName: 短信转发
+        CFBundleDisplayName: SmsBark
         CFBundleName: SmsBark
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
